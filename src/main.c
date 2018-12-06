@@ -35,9 +35,7 @@ struct values Meteo_values;
  */
 void setup(void);
 
-/**
- *  @brief TWI Finite State Machine transmits all slave addresses.
- */
+
 void fsm_twi_scanner(void);
 
 /* Global variables ----------------------------------------------------------*/
@@ -45,14 +43,14 @@ typedef enum {
     IDLE_STATE = 1,
     HUMIDITY_STATE,
     TEMPERATURE_STATE,
-    UART_STATE,
+    RANGES_STATE,
   
 } state_t;
-/* FSM for scanning TWI bus */
+
 state_t twi_state = IDLE_STATE;
 
-char uart_string[5];     // used in itoa convertion function
-char uart_string2[10];
+char uart_string[5];     
+char uart_string2[10];  //We use these strings to convert variables into strings with itoa instruction
 char uart_string3[10];
 char uart_string4[10];
 
@@ -69,8 +67,11 @@ int main(void)
     /* Forever loop */
     while (1) {
 
-        // display constantly the data of humidy and temperature
-        // Convert int data type to string data type
+        /* display constantly the data of humidity and temperature
+        * Convert variables into string data type*/
+        
+        /*it would be better to do this in the RANGES_STATE but the convertion takes much time and it didn´t work
+        * even with another timer*/
         
         uart_puts("\r\n---Humidity values---:\r\n");
         itoa (Meteo_values.humidity_integer, uart_string, 10);
@@ -183,7 +184,7 @@ void fsm_twi_scanner(void)
             Meteo_values.temperature_integer = twi_read_ack();
             Meteo_values.temperature_decimal = twi_read_nack();
             twi_stop ();
-            twi_state = UART_STATE;
+            twi_state = RANGES_STATE;
 
 
         }
@@ -193,10 +194,10 @@ void fsm_twi_scanner(void)
         }
         break;
 
-    case UART_STATE:
+    case RANGES_STATE:
 
-      // Dependending on the temperature, 1 LED will
-      // turn on, the others will be off
+      /* Dependending on the temperature, 1 LED will
+      *  turn on, the others will be off */
 
         if(Meteo_values.temperature_integer<=28){
             PORTB |= _BV(PB5); // turn on
